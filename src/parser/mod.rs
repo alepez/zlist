@@ -17,8 +17,11 @@ pub enum ParserError {
 
 struct ListItem {
     name: String,
+    #[allow(unused)]
     used: Option<Byte>,
+    #[allow(unused)]
     available: Option<Byte>,
+    #[allow(unused)]
     refer: Option<Byte>,
 }
 
@@ -34,7 +37,7 @@ fn parse_line(s: &str) -> ListItem {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-enum Period {
+pub enum Period {
     Hourly,
     Daily,
     Monthly,
@@ -55,10 +58,11 @@ impl FromStr for Period {
     }
 }
 
-struct AutoSnapInfo {
-    name: String,
-    timestamp: DateTime<Utc>,
-    period: Period,
+#[derive(Debug)]
+pub struct AutoSnapInfo {
+    pub name: String,
+    pub timestamp: DateTime<Utc>,
+    pub period: Period,
 }
 
 impl FromStr for AutoSnapInfo {
@@ -89,6 +93,31 @@ impl FromStr for AutoSnapInfo {
         };
 
         Ok(result)
+    }
+}
+
+#[derive(Debug)]
+pub struct AutoSnapList(Vec<AutoSnapInfo>);
+
+impl FromStr for AutoSnapList {
+    type Err = ParserError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let v: Vec<AutoSnapInfo> = s
+            .lines()
+            .map(parse_line)
+            .filter_map(|list_item| {
+                let autosnap_info = AutoSnapInfo::from_str(&list_item.name);
+                autosnap_info.ok()
+            })
+            .collect();
+        Ok(Self(v))
+    }
+}
+
+impl AutoSnapList {
+    pub fn iter(&self) -> std::slice::Iter<'_, AutoSnapInfo> {
+        self.0.iter()
     }
 }
 
