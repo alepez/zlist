@@ -1,4 +1,5 @@
 mod zfs;
+mod parser;
 
 use std::collections::BTreeMap;
 use std::io::Write;
