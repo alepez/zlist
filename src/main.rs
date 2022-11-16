@@ -1,8 +1,10 @@
+mod zfs;
+
+use std::collections::BTreeMap;
 use std::io::Write;
-use std::{collections::BTreeMap, process::Command};
 
 fn main() {
-    let s = zfs_list_snapshots();
+    let s = zfs::list_snapshots();
     let r = list_autosnap(s);
     print!("{}", r);
 }
@@ -28,18 +30,6 @@ fn list_autosnap(s: String) -> String {
     }
 
     String::from_utf8(buf).expect("Invalid string")
-}
-
-fn zfs_list_snapshots() -> String {
-    // zfs list -t snapshot
-    let stdout = Command::new("zfs")
-        .arg("list")
-        .arg("-t")
-        .arg("snapshot")
-        .output()
-        .expect("failed to execute process")
-        .stdout;
-    String::from_utf8(stdout).expect("Invalid string")
 }
 
 fn remove_autosnap_timestamp(s: &str) -> &str {
