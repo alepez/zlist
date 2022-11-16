@@ -3,10 +3,11 @@ mod zfs;
 use std::collections::BTreeMap;
 use std::io::Write;
 
-fn main() {
-    let s = zfs::list_snapshots();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let s = zfs::list_snapshots()?;
     let r = list_autosnap(s);
     print!("{}", r);
+    Ok(())
 }
 
 fn occurrencies(s: String) -> BTreeMap<String, usize> {
