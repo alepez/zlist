@@ -80,7 +80,8 @@ impl Display for AutosnapReport {
                 &[format::LinePosition::Title],
                 format::LineSeparator::new('-', '+', '+', '+'),
             )
-            .padding(0, 1)
+            .column_separator('|')
+            .padding(1, 1)
             .build();
         table.set_format(format);
         table.set_titles(row!["", "time", "H", "D", "M", "Y"]);
@@ -94,15 +95,25 @@ impl Display for AutosnapReport {
             ];
 
             let last_time = times.iter().filter_map(|x| x.as_ref()).max();
-            let last_time = last_time.map(|x| x.to_string()).unwrap_or_default();
+            let time_diff = last_time
+                .and_then(|t| {
+                    let now = Utc::now();
+                    let diff = now.signed_duration_since(*t);
+                    diff.to_std().ok()
+                })
+                .map(|diff| {
+                    let f = timeago::Formatter::new();
+                    f.convert(diff)
+                })
+                .unwrap_or_default();
 
             table.add_row(row![
                 item.name,
-                last_time,
                 item.hourly.count,
                 item.daily.count,
                 item.monthly.count,
                 item.yearly.count,
+                time_diff,
             ]);
         }
 
