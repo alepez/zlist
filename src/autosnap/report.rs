@@ -1,6 +1,7 @@
-use crate::parser::{AutoSnapList, Period};
 use chrono::prelude::*;
 use std::{collections::BTreeMap, fmt::Display};
+
+use super::{AutoSnapList, Period};
 
 #[derive(Debug, Default)]
 struct AutoSnapReportPeriodItem {

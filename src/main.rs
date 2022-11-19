@@ -1,11 +1,10 @@
-mod parser;
-mod report;
-mod zfs;
-
-use report::AutoSnapReport;
-
-use self::parser::AutoSnapList;
 use std::str::FromStr;
+
+use crate::autosnap::{AutoSnapList, AutoSnapReport};
+
+mod autosnap;
+mod parser;
+mod zfs;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let s = zfs::list_snapshots()?;
