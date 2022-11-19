@@ -75,8 +75,15 @@ impl From<AutosnapList> for AutosnapReport {
 impl Display for AutosnapReport {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut table = Table::new();
-        table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
-        table.set_titles(row!["name", "H", "D", "M", "Y", "Last snapshot",]);
+        let format = format::FormatBuilder::new()
+            .separators(
+                &[format::LinePosition::Title],
+                format::LineSeparator::new('-', '+', '+', '+'),
+            )
+            .padding(0, 1)
+            .build();
+        table.set_format(format);
+        table.set_titles(row!["", "time", "H", "D", "M", "Y"]);
 
         for item in self.0.iter() {
             let times = [
@@ -91,11 +98,11 @@ impl Display for AutosnapReport {
 
             table.add_row(row![
                 item.name,
+                last_time,
                 item.hourly.count,
                 item.daily.count,
                 item.monthly.count,
                 item.yearly.count,
-                last_time
             ]);
         }
 
