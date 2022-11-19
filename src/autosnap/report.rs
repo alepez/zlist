@@ -1,24 +1,24 @@
 use chrono::prelude::*;
 use std::{collections::BTreeMap, fmt::Display};
 
-use super::{AutoSnapList, Period};
+use super::{AutosnapList, Period};
 
 #[derive(Debug, Default)]
-struct AutoSnapReportPeriodItem {
+struct AutosnapReportPeriodItem {
     count: usize,
     last: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug)]
-struct AutoSnapReportItem {
+struct AutosnapReportItem {
     name: String,
-    hourly: AutoSnapReportPeriodItem,
-    daily: AutoSnapReportPeriodItem,
-    monthly: AutoSnapReportPeriodItem,
-    yearly: AutoSnapReportPeriodItem,
+    hourly: AutosnapReportPeriodItem,
+    daily: AutosnapReportPeriodItem,
+    monthly: AutosnapReportPeriodItem,
+    yearly: AutosnapReportPeriodItem,
 }
 
-impl AutoSnapReportItem {
+impl AutosnapReportItem {
     fn new(name: String) -> Self {
         Self {
             name,
@@ -30,7 +30,7 @@ impl AutoSnapReportItem {
     }
 }
 
-pub struct AutoSnapReport(Vec<AutoSnapReportItem>);
+pub struct AutosnapReport(Vec<AutosnapReportItem>);
 
 fn update_last_timestamp(last: &mut Option<DateTime<Utc>>, timestamp: DateTime<Utc>) {
     if let Some(last_time) = last {
@@ -42,14 +42,14 @@ fn update_last_timestamp(last: &mut Option<DateTime<Utc>>, timestamp: DateTime<U
     }
 }
 
-fn update_period_item(curr: &mut AutoSnapReportPeriodItem, timestamp: DateTime<Utc>) {
+fn update_period_item(curr: &mut AutosnapReportPeriodItem, timestamp: DateTime<Utc>) {
     update_last_timestamp(&mut curr.last, timestamp);
     curr.count += 1
 }
 
-impl From<AutoSnapList> for AutoSnapReport {
-    fn from(list: AutoSnapList) -> Self {
-        let mut count: BTreeMap<String, AutoSnapReportItem> = BTreeMap::new();
+impl From<AutosnapList> for AutosnapReport {
+    fn from(list: AutosnapList) -> Self {
+        let mut count: BTreeMap<String, AutosnapReportItem> = BTreeMap::new();
 
         for item in list.iter() {
             let key = &item.name;
@@ -63,7 +63,7 @@ impl From<AutoSnapList> for AutoSnapReport {
                         Period::Yearly => update_period_item(&mut curr.yearly, item.timestamp),
                     };
                 })
-                .or_insert_with(|| AutoSnapReportItem::new(key.to_string()));
+                .or_insert_with(|| AutosnapReportItem::new(key.to_string()));
         }
 
         let v = count.into_values().collect();
@@ -72,7 +72,7 @@ impl From<AutoSnapList> for AutoSnapReport {
     }
 }
 
-impl Display for AutoSnapReport {
+impl Display for AutosnapReport {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for item in self.0.iter() {
             let times = [

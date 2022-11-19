@@ -2,19 +2,19 @@ mod report;
 
 use crate::parser::{List, ListItem};
 use chrono::prelude::*;
-pub use report::AutoSnapReport;
+pub use report::AutosnapReport;
 use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum ParserError {
-    #[error("AutoSnap failed to parse")]
+pub enum AutosnapError {
+    #[error("Autosnap failed to parse")]
     Fail,
-    #[error("AutoSnap delimiter not found")]
-    NotAutoSnapDelimiterFound,
-    #[error("AutoSnap invalid period")]
+    #[error("Autosnap delimiter not found")]
+    DelimiterNotFound,
+    #[error("Autosnap invalid period")]
     InvalidPeriod,
-    #[error("AutoSnap invalid timestamp: {0}")]
+    #[error("Autosnap invalid timestamp: {0}")]
     InvalidTimestamp(chrono::format::ParseError),
 }
 
@@ -27,7 +27,7 @@ pub enum Period {
 }
 
 impl FromStr for Period {
-    type Err = ParserError;
+    type Err = AutosnapError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
@@ -35,27 +35,27 @@ impl FromStr for Period {
             "daily" => Ok(Period::Daily),
             "monthly" => Ok(Period::Monthly),
             "yearly" => Ok(Period::Yearly),
-            _ => Err(ParserError::InvalidPeriod),
+            _ => Err(AutosnapError::InvalidPeriod),
         }
     }
 }
 
 #[derive(Debug)]
-pub struct AutoSnapInfo {
+pub struct AutosnapInfo {
     pub name: String,
     pub timestamp: DateTime<Utc>,
     pub period: Period,
 }
 
-impl TryFrom<List> for AutoSnapList {
-    type Error = ParserError;
+impl TryFrom<List> for AutosnapList {
+    type Error = AutosnapError;
 
     fn try_from(list: List) -> Result<Self, Self::Error> {
         let v = list
             .0
             .iter()
             .filter_map(|list_item| {
-                let autosnap_info = AutoSnapInfo::from_str(list_item.name());
+                let autosnap_info = AutosnapInfo::from_str(list_item.name());
                 autosnap_info.ok()
             })
             .collect();
@@ -63,61 +63,45 @@ impl TryFrom<List> for AutoSnapList {
     }
 }
 
-impl TryFrom<ListItem> for AutoSnapInfo {
-    type Error = ParserError;
+impl TryFrom<ListItem> for AutosnapInfo {
+    type Error = AutosnapError;
 
     fn try_from(value: ListItem) -> Result<Self, Self::Error> {
-        AutoSnapInfo::from_str(value.name())
+        AutosnapInfo::from_str(value.name())
     }
 }
 
 #[derive(Debug)]
-pub struct AutoSnapList(Vec<AutoSnapInfo>);
+pub struct AutosnapList(Vec<AutosnapInfo>);
 
-// impl FromStr for AutoSnapList {
-//     type Err = ParserError;
-
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         let v: Vec<AutoSnapInfo> = s
-//             .lines()
-//             .map(crate::parser::parse_line)
-//             .filter_map(|list_item| {
-//                 let autosnap_info = AutoSnapInfo::from_str(&list_item.name);
-//                 autosnap_info.ok()
-//             })
-//             .collect();
-//         Ok(Self(v))
-//     }
-// }
-
-impl AutoSnapList {
-    pub fn iter(&self) -> std::slice::Iter<'_, AutoSnapInfo> {
+impl AutosnapList {
+    pub fn iter(&self) -> std::slice::Iter<'_, AutosnapInfo> {
         self.0.iter()
     }
 }
 
-impl FromStr for AutoSnapInfo {
-    type Err = ParserError;
+impl FromStr for AutosnapInfo {
+    type Err = AutosnapError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let (name, r) = s
             .split_once("@autosnap_")
-            .ok_or(ParserError::NotAutoSnapDelimiterFound)?;
+            .ok_or(AutosnapError::DelimiterNotFound)?;
 
         let mut tokens = r.split('_');
-        let date = tokens.next().ok_or(ParserError::Fail)?;
-        let time = tokens.next().ok_or(ParserError::Fail)?;
-        let period = tokens.next().ok_or(ParserError::Fail)?;
+        let date = tokens.next().ok_or(AutosnapError::Fail)?;
+        let time = tokens.next().ok_or(AutosnapError::Fail)?;
+        let period = tokens.next().ok_or(AutosnapError::Fail)?;
 
         let timestamp = format!("{} {}", date, time);
 
         let timestamp = Utc
             .datetime_from_str(&timestamp, "%Y-%m-%d %H:%M:%S")
-            .map_err(ParserError::InvalidTimestamp)?;
+            .map_err(AutosnapError::InvalidTimestamp)?;
 
-        let period = Period::from_str(period).map_err(|_| ParserError::Fail)?;
+        let period = Period::from_str(period).map_err(|_| AutosnapError::Fail)?;
 
-        let result = AutoSnapInfo {
+        let result = AutosnapInfo {
             name: name.to_string(),
             timestamp,
             period,
@@ -133,7 +117,7 @@ mod tests {
 
     #[test]
     fn test_parse_autosnap_info() {
-        let info = AutoSnapInfo::from_str(
+        let info = AutosnapInfo::from_str(
             "radon_pool/data/root/home/alepez/workspace@autosnap_2022-11-13_13:03:01_daily",
         )
         .unwrap();
