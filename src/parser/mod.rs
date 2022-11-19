@@ -37,7 +37,13 @@ impl FromStr for ListItem {
     }
 }
 
-pub struct List(pub Vec<ListItem>);
+pub struct List(Vec<ListItem>);
+
+impl List {
+    pub fn iter(&self) -> std::slice::Iter<'_, ListItem> {
+        self.0.iter()
+    }
+}
 
 impl FromStr for List {
     type Err = ParserError;

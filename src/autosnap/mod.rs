@@ -42,9 +42,9 @@ impl FromStr for Period {
 
 #[derive(Debug)]
 pub struct AutosnapInfo {
-    pub name: String,
-    pub timestamp: DateTime<Utc>,
-    pub period: Period,
+    name: String,
+    timestamp: DateTime<Utc>,
+    period: Period,
 }
 
 impl TryFrom<List> for AutosnapList {
@@ -52,7 +52,6 @@ impl TryFrom<List> for AutosnapList {
 
     fn try_from(list: List) -> Result<Self, Self::Error> {
         let v = list
-            .0
             .iter()
             .filter_map(|list_item| {
                 let autosnap_info = AutosnapInfo::from_str(list_item.name());
