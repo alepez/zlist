@@ -1,7 +1,12 @@
 use byte_unit::Byte;
+use std::str::FromStr;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum ParserError {}
 
 pub struct ListItem {
-    pub name: String, // FIXME
+    name: String,
     #[allow(unused)]
     used: Option<Byte>,
     #[allow(unused)]
@@ -10,14 +15,33 @@ pub struct ListItem {
     refer: Option<Byte>,
 }
 
-pub fn parse_line(s: &str) -> ListItem {
-    let z: Vec<&str> = s.split_ascii_whitespace().collect();
-    let name = z[0].to_string();
-    ListItem {
-        name,
-        used: Byte::from_str(z[1]).ok(),
-        available: Byte::from_str(z[2]).ok(),
-        refer: Byte::from_str(z[3]).ok(),
+impl ListItem {
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+impl From<&str> for ListItem {
+    fn from(s: &str) -> Self {
+        let z: Vec<&str> = s.split_ascii_whitespace().collect();
+        let name = z[0].to_string();
+        ListItem {
+            name,
+            used: Byte::from_str(z[1]).ok(),
+            available: Byte::from_str(z[2]).ok(),
+            refer: Byte::from_str(z[3]).ok(),
+        }
+    }
+}
+
+pub struct List(pub Vec<ListItem>);
+
+impl FromStr for List {
+    type Err = ParserError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let v: Vec<ListItem> = s.lines().map(ListItem::from).collect();
+        Ok(Self(v))
     }
 }
 
@@ -27,7 +51,7 @@ mod tests {
 
     #[test]
     fn test_parse_list_line() {
-        let info = parse_line("radon_pool/data/root/home/alepez/workspace@autosnap_2022-11-13_13:03:01_daily                        51.8M      -     56.9G  -");
+        let info = ListItem::from("radon_pool/data/root/home/alepez/workspace@autosnap_2022-11-13_13:03:01_daily                        51.8M      -     56.9G  -");
 
         assert_eq!(
             info.name,

@@ -1,5 +1,6 @@
 mod report;
 
+use crate::parser::{List, ListItem};
 use chrono::prelude::*;
 pub use report::AutoSnapReport;
 use std::str::FromStr;
@@ -46,6 +47,55 @@ pub struct AutoSnapInfo {
     pub period: Period,
 }
 
+impl TryFrom<List> for AutoSnapList {
+    type Error = ParserError;
+
+    fn try_from(list: List) -> Result<Self, Self::Error> {
+        let v = list
+            .0
+            .iter()
+            .filter_map(|list_item| {
+                let autosnap_info = AutoSnapInfo::from_str(list_item.name());
+                autosnap_info.ok()
+            })
+            .collect();
+        Ok(Self(v))
+    }
+}
+
+impl TryFrom<ListItem> for AutoSnapInfo {
+    type Error = ParserError;
+
+    fn try_from(value: ListItem) -> Result<Self, Self::Error> {
+        AutoSnapInfo::from_str(value.name())
+    }
+}
+
+#[derive(Debug)]
+pub struct AutoSnapList(Vec<AutoSnapInfo>);
+
+// impl FromStr for AutoSnapList {
+//     type Err = ParserError;
+
+//     fn from_str(s: &str) -> Result<Self, Self::Err> {
+//         let v: Vec<AutoSnapInfo> = s
+//             .lines()
+//             .map(crate::parser::parse_line)
+//             .filter_map(|list_item| {
+//                 let autosnap_info = AutoSnapInfo::from_str(&list_item.name);
+//                 autosnap_info.ok()
+//             })
+//             .collect();
+//         Ok(Self(v))
+//     }
+// }
+
+impl AutoSnapList {
+    pub fn iter(&self) -> std::slice::Iter<'_, AutoSnapInfo> {
+        self.0.iter()
+    }
+}
+
 impl FromStr for AutoSnapInfo {
     type Err = ParserError;
 
@@ -74,31 +124,6 @@ impl FromStr for AutoSnapInfo {
         };
 
         Ok(result)
-    }
-}
-
-#[derive(Debug)]
-pub struct AutoSnapList(Vec<AutoSnapInfo>);
-
-impl FromStr for AutoSnapList {
-    type Err = ParserError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let v: Vec<AutoSnapInfo> = s
-            .lines()
-            .map(crate::parser::parse_line)
-            .filter_map(|list_item| {
-                let autosnap_info = AutoSnapInfo::from_str(&list_item.name);
-                autosnap_info.ok()
-            })
-            .collect();
-        Ok(Self(v))
-    }
-}
-
-impl AutoSnapList {
-    pub fn iter(&self) -> std::slice::Iter<'_, AutoSnapInfo> {
-        self.0.iter()
     }
 }
 
