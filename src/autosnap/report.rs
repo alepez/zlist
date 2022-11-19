@@ -1,7 +1,7 @@
-use chrono::prelude::*;
-use std::{collections::BTreeMap, fmt::Display};
-
 use super::{AutosnapList, Period};
+use chrono::prelude::*;
+use prettytable::{format, row, Table};
+use std::{collections::BTreeMap, fmt::Display};
 
 #[derive(Debug, Default)]
 struct AutosnapReportPeriodItem {
@@ -74,6 +74,10 @@ impl From<AutosnapList> for AutosnapReport {
 
 impl Display for AutosnapReport {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut table = Table::new();
+        table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+        table.set_titles(row!["name", "H", "D", "M", "Y", "Last snapshot",]);
+
         for item in self.0.iter() {
             let times = [
                 item.hourly.last,
@@ -85,18 +89,16 @@ impl Display for AutosnapReport {
             let last_time = times.iter().filter_map(|x| x.as_ref()).max();
             let last_time = last_time.map(|x| x.to_string()).unwrap_or_default();
 
-            writeln!(
-                f,
-                "{:60} h: {:<3}, d: {:<3}, m: {:<3}, y: {:<3} {}",
+            table.add_row(row![
                 item.name,
                 item.hourly.count,
                 item.daily.count,
                 item.monthly.count,
                 item.yearly.count,
                 last_time
-            )?;
+            ]);
         }
 
-        Ok(())
+        writeln!(f, "{}", table)
     }
 }
