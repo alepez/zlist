@@ -21,16 +21,19 @@ impl ListItem {
     }
 }
 
-impl From<&str> for ListItem {
-    fn from(s: &str) -> Self {
+impl FromStr for ListItem {
+    type Err = ParserError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let z: Vec<&str> = s.split_ascii_whitespace().collect();
         let name = z[0].to_string();
-        ListItem {
+        let x = ListItem {
             name,
             used: Byte::from_str(z[1]).ok(),
             available: Byte::from_str(z[2]).ok(),
             refer: Byte::from_str(z[3]).ok(),
-        }
+        };
+        Ok(x)
     }
 }
 
@@ -40,7 +43,10 @@ impl FromStr for List {
     type Err = ParserError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let v: Vec<ListItem> = s.lines().map(ListItem::from).collect();
+        let v: Vec<ListItem> = s
+            .lines()
+            .filter_map(|x| ListItem::from_str(x).ok())
+            .collect();
         Ok(Self(v))
     }
 }
@@ -51,7 +57,8 @@ mod tests {
 
     #[test]
     fn test_parse_list_line() {
-        let info = ListItem::from("radon_pool/data/root/home/alepez/workspace@autosnap_2022-11-13_13:03:01_daily                        51.8M      -     56.9G  -");
+        let info = ListItem::from_str("radon_pool/data/root/home/alepez/workspace@autosnap_2022-11-13_13:03:01_daily                        51.8M      -     56.9G  -");
+        let info = info.unwrap();
 
         assert_eq!(
             info.name,
