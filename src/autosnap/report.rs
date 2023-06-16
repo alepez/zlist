@@ -84,7 +84,7 @@ impl Display for AutosnapReport {
             .padding(1, 1)
             .build();
         table.set_format(format);
-        table.set_titles(row!["", "time", "H", "D", "M", "Y"]);
+        table.set_titles(row!["name", "H", "D", "M", "Y", "last"]);
 
         for item in self.0.iter() {
             let times = [
